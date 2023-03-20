@@ -42,7 +42,6 @@ namespace ClientCurrency
                                 clientSocket.Close();
                                 command = "Exit";
                                 break;
-                                
                             }
                             if (message != null && message != "")
                             {

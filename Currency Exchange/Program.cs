@@ -26,7 +26,6 @@ namespace ServerCurrency
             }
             Console.ReadLine();
         }
-
         static void AcceptConnectionCallback(IAsyncResult result)
         {
             if (result.AsyncState != null)
@@ -38,9 +37,7 @@ namespace ServerCurrency
                 client.BeginReceive(data, 0, data.Length, SocketFlags.None, ClientReciveMessageCallback, new ClientMessage(client, data));
                 server.BeginAccept(AcceptConnectionCallback, server);
             }
-;
         }
-
         static void ClientReciveMessageCallback(IAsyncResult result)
         {
             if (result.AsyncState != null)
@@ -55,89 +52,87 @@ namespace ServerCurrency
                     Console.WriteLine($"Клиент  {client.RemoteEndPoint}  разорвал соединение в {DateTime.Now}");
                     client.Close();
                 }
-                else { 
-                string[] currencys = message.Split(' ');
-                string answer = CurrencyList.GetValue(currencys[0], currencys[1]).ToString();
-                byte[] senddata = Encoding.UTF8.GetBytes(answer);
-                    Console.WriteLine($"Клиент  {client.RemoteEndPoint}  запросил перевод {message.Substring(0, 8)} в {DateTime.Now}");
-                client.BeginSend(senddata, 0, senddata.Length, SocketFlags.None, ClientSendMessageCallback, client);
-                if (client != null)
+                else
                 {
-                    client.BeginReceive(data, 0, data.Length, SocketFlags.None, ClientReciveMessageCallback, new ClientMessage(client, data));
+                    string[] currencys = message.Split(' ');
+                    string answer = CurrencyList.GetValue(currencys[0], currencys[1]).ToString();
+                    byte[] senddata = Encoding.UTF8.GetBytes(answer);
+                    Console.WriteLine($"Клиент  {client.RemoteEndPoint}  запросил перевод {message.Substring(0, 8)} в {DateTime.Now}");
+                    client.BeginSend(senddata, 0, senddata.Length, SocketFlags.None, ClientSendMessageCallback, client);
+                    if (client != null)
+                    {
+                        client.BeginReceive(data, 0, data.Length, SocketFlags.None, ClientReciveMessageCallback, new ClientMessage(client, data));
+                    }
                 }
             }
         }
-    }
-
-    static void ClientSendMessageCallback(IAsyncResult result)
-    {
-        if (result.AsyncState != null)
+        static void ClientSendMessageCallback(IAsyncResult result)
         {
-            Socket client = (Socket)result.AsyncState;
-            client.EndSend(result);
+            if (result.AsyncState != null)
+            {
+                Socket client = (Socket)result.AsyncState;
+                client.EndSend(result);
+            }
         }
     }
-}
-class ClientMessage
-{
-    Socket _client;
-    byte[] _message = new byte[1024];
-    public ClientMessage(Socket client, byte[] message)
+    class ClientMessage
     {
-        _client = client;
-        _message = message;
-    }
-    public Socket GetClient()
-    {
-        return _client;
-    }
-    public byte[] GetData()
-    {
-        return _message;
-    }
-}
-
-static class CurrencyList
-{
-    static double EUR = 82.3736;
-    static double USD = 77.2422;
-    static double GBP = 93.7720;
-
-    static public double GetValue(string first, string second)
-    {
-        double result = 0;
-        switch (first)
+        Socket _client;
+        byte[] _message = new byte[1024];
+        public ClientMessage(Socket client, byte[] message)
         {
-            case "EUR": if (second == "USD") { result = EURToUSD(); } else { result = EURToGBP(); } break;
-            case "USD": if (second == "EUR") { result = USDToEUR(); } else { result = USDToGBP(); } break;
-            case "GBP": if (second == "EUR") { result = GBPToEUR(); } else { result = GBPToUSD(); } break;
+            _client = client;
+            _message = message;
         }
-        return result;
+        public Socket GetClient()
+        {
+            return _client;
+        }
+        public byte[] GetData()
+        {
+            return _message;
+        }
     }
+    static class CurrencyList
+    {
+        static double EUR = 82.3736;
+        static double USD = 77.2422;
+        static double GBP = 93.7720;
 
-    static double USDToEUR()
-    {
-        return USD / EUR;
+        static public double GetValue(string first, string second)
+        {
+            double result = 0;
+            switch (first)
+            {
+                case "EUR": if (second == "USD") { result = EURToUSD(); } else { result = EURToGBP(); } break;
+                case "USD": if (second == "EUR") { result = USDToEUR(); } else { result = USDToGBP(); } break;
+                case "GBP": if (second == "EUR") { result = GBPToEUR(); } else { result = GBPToUSD(); } break;
+            }
+            return result;
+        }
+        static double USDToEUR()
+        {
+            return USD / EUR;
+        }
+        static double USDToGBP()
+        {
+            return USD / GBP;
+        }
+        static double GBPToUSD()
+        {
+            return GBP / USD;
+        }
+        static double GBPToEUR()
+        {
+            return GBP / EUR;
+        }
+        static double EURToGBP()
+        {
+            return EUR / GBP;
+        }
+        static double EURToUSD()
+        {
+            return EUR / USD;
+        }
     }
-    static double USDToGBP()
-    {
-        return USD / GBP;
-    }
-    static double GBPToUSD()
-    {
-        return GBP / USD;
-    }
-    static double GBPToEUR()
-    {
-        return GBP / EUR;
-    }
-    static double EURToGBP()
-    {
-        return EUR / GBP;
-    }
-    static double EURToUSD()
-    {
-        return EUR / USD;
-    }
-}
 }
